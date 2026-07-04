@@ -13,9 +13,9 @@ const PUBLIC_PATHS = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
+  // Skip middleware entirely for static assets — fastest path
   const isAsset =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/icons") ||
@@ -26,10 +26,15 @@ export async function middleware(request: NextRequest) {
     pathname.endsWith(".ico") ||
     pathname === "/sw.js";
 
-  if (isAsset || PUBLIC_PATHS.includes(pathname)) {
-    return response;
+  if (isAsset) {
+    return NextResponse.next();
   }
 
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Check auth cookie — no network call
   const hasSupabaseCookies = request.cookies
     .getAll()
     .some((cookie) => cookie.name.startsWith("sb-") && cookie.value.length > 0);
@@ -40,7 +45,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  return response;
+  // Refresh session cookie (reads from cookie only, no network call)
+  return updateSession(request);
 }
 
 export const config = {
