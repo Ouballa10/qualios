@@ -186,7 +186,7 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
                   )}
                 >
                   <FileStack className="h-3.5 w-3.5" />
-                  Fiche de couverture &amp; signatures
+                  Fiche &amp; signatures
                 </button>
                 <button
                   type="button"
@@ -205,58 +205,107 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
             ) : null}
 
             {/* Content */}
-            <div className="min-h-0 flex-1 overflow-auto bg-[#eef9fd] p-3">
+            <div className="min-h-0 flex-1 overflow-auto bg-[#eef9fd]">
 
-              {/* Cover tab */}
+              {/* COMBINED VIEW: cover on top, file below — bhal qualios */}
               {hasCover && activeTab === "cover" && coverUrl ? (
-                <iframe
-                  title={`Fiche de couverture — ${displayTitle}`}
-                  src={coverUrl}
-                  className="h-[min(78vh,900px)] w-full border border-[#b9def4] bg-white"
-                />
+                <div className="flex flex-col gap-0">
+                  {/* Fiche de couverture avec signatures */}
+                  <div className="border-b-4 border-[#ffcd12]">
+                    <iframe
+                      title={`Fiche de couverture — ${displayTitle}`}
+                      src={coverUrl}
+                      className="w-full border-0 bg-white"
+                      style={{ height: "calc(100vh - 140px)", minHeight: "600px" }}
+                    />
+                  </div>
+
+                  {/* Document original en dessous */}
+                  {signedUrl && inlinePreview ? (
+                    <div>
+                      <div className="flex items-center gap-2 bg-[#2749a0] px-4 py-2 text-xs font-semibold text-white">
+                        <FileText className="h-3.5 w-3.5" />
+                        Document original
+                      </div>
+                      {getFileExtension(request.filePath) === "pdf" ? (
+                        <iframe
+                          title={`Document — ${displayTitle}`}
+                          src={signedUrl}
+                          className="w-full border-0 bg-white"
+                          style={{ height: "calc(100vh - 140px)", minHeight: "600px" }}
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={signedUrl}
+                          alt={displayTitle}
+                          className="mx-auto max-w-full bg-white object-contain p-4"
+                        />
+                      )}
+                    </div>
+                  ) : signedUrl ? (
+                    <div className="flex flex-col items-center gap-4 bg-white px-4 py-8 text-center text-sm text-slate-600">
+                      <FileText className="h-8 w-8 text-[#2749a0]" />
+                      <p>Fichier joint disponible au téléchargement</p>
+                      <a
+                        href={signedUrl}
+                        download={fileName}
+                        className="inline-flex min-h-10 items-center gap-2 rounded border border-[#2749a0] bg-[#2749a0] px-4 text-sm font-semibold text-white hover:bg-[#1f3f91]"
+                      >
+                        <Download className="h-4 w-4" />
+                        Telecharger le fichier
+                      </a>
+                    </div>
+                  ) : loading ? (
+                    <div className="flex items-center justify-center bg-white py-8 text-sm text-slate-500">
+                      Chargement du document...
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
 
-              {/* File tab (or no cover) */}
+              {/* File-only tab or no cover */}
               {(!hasCover || activeTab === "file") ? (
-                loading ? (
-                  <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-600">
-                    Chargement du document...
-                  </div>
-                ) : error ? (
-                  <div className="border border-[#f1c4c4] bg-[#fff7f7] px-4 py-6 text-sm text-danger">
-                    {error}
-                  </div>
-                ) : signedUrl && inlinePreview ? (
-                  getFileExtension(request.filePath) === "pdf" ? (
-                    <iframe
-                      title={displayTitle}
-                      src={signedUrl}
-                      className="h-[min(78vh,900px)] w-full border border-[#b9def4] bg-white"
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={signedUrl}
-                      alt={displayTitle}
-                      className="mx-auto max-h-[78vh] w-auto max-w-full border border-[#b9def4] bg-white object-contain"
-                    />
-                  )
-                ) : signedUrl ? (
-                  <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 px-4 text-center text-sm text-slate-600">
-                    <p>
-                      Ce format ne peut pas etre affiche directement dans l&apos;application. Telechargez-le
-                      pour le consulter.
-                    </p>
-                    <a
-                      href={signedUrl}
-                      download={fileName}
-                      className="inline-flex min-h-10 items-center gap-2 rounded border border-[#2749a0] bg-[#2749a0] px-4 text-sm font-semibold text-white hover:bg-[#1f3f91]"
-                    >
-                      <Download className="h-4 w-4" />
-                      Telecharger le fichier
-                    </a>
-                  </div>
-                ) : null
+                <div className="p-3">
+                  {loading ? (
+                    <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-600">
+                      Chargement du document...
+                    </div>
+                  ) : error ? (
+                    <div className="border border-[#f1c4c4] bg-[#fff7f7] px-4 py-6 text-sm text-danger">
+                      {error}
+                    </div>
+                  ) : signedUrl && inlinePreview ? (
+                    getFileExtension(request.filePath) === "pdf" ? (
+                      <iframe
+                        title={displayTitle}
+                        src={signedUrl}
+                        className="h-[min(78vh,900px)] w-full border border-[#b9def4] bg-white"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={signedUrl}
+                        alt={displayTitle}
+                        className="mx-auto max-h-[78vh] w-auto max-w-full border border-[#b9def4] bg-white object-contain"
+                      />
+                    )
+                  ) : signedUrl ? (
+                    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 px-4 text-center text-sm text-slate-600">
+                      <p>
+                        Ce format ne peut pas etre affiche directement. Telechargez-le pour le consulter.
+                      </p>
+                      <a
+                        href={signedUrl}
+                        download={fileName}
+                        className="inline-flex min-h-10 items-center gap-2 rounded border border-[#2749a0] bg-[#2749a0] px-4 text-sm font-semibold text-white hover:bg-[#1f3f91]"
+                      >
+                        <Download className="h-4 w-4" />
+                        Telecharger le fichier
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           </div>
